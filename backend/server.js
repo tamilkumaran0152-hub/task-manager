@@ -6,14 +6,16 @@ const { Pool } = require("pg");
 
 const app = express();
 
+// Middleware
+app.use(cors());
 app.use(express.json());
 
+// Database connection
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
 });
 
-app.use(cors());
-
+// CREATE - Add a new task
 app.post("/tasks", async (req, res) => {
     try {
         const { title } = req.body;
@@ -30,10 +32,7 @@ app.post("/tasks", async (req, res) => {
     }
 });
 
-app.get("/", (req, res) => {
-    res.send("Backend is working!");
-});
-
+// READ - Get all tasks
 app.get("/tasks", async (req, res) => {
     try {
         const result = await pool.query("SELECT * FROM tasks");
@@ -45,20 +44,7 @@ app.get("/tasks", async (req, res) => {
     }
 });
 
-app.get("/test-db", async (req, res) => {
-    try {
-        const result = await pool.query("SELECT NOW()");
-        res.json(result.rows);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Database connection failed");
-    }
-});
-
-app.listen(5000, () => {
-    console.log("Backend running on http://localhost:5000");
-});
-
+// UPDATE - Edit a task
 app.patch("/tasks/:id", async (req, res) => {
     try {
         const { id } = req.params;
@@ -76,6 +62,7 @@ app.patch("/tasks/:id", async (req, res) => {
     }
 });
 
+// DELETE - Delete a task
 app.delete("/tasks/:id", async (req, res) => {
     try {
         const { id } = req.params;
@@ -90,4 +77,26 @@ app.delete("/tasks/:id", async (req, res) => {
         console.error(error);
         res.status(500).send("Database error");
     }
+});
+
+// Test database connection
+app.get("/test-db", async (req, res) => {
+    try {
+        const result = await pool.query("SELECT NOW()");
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Database connection failed");
+    }
+});
+
+// Test backend
+app.get("/", (req, res) => {
+    res.send("Backend is working!");
+});
+
+// Start server
+app.listen(5000, () => {
+    console.log("Backend running on http://localhost:5000");
 });
