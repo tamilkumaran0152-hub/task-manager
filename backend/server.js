@@ -11,7 +11,12 @@ const app = express();
 // Middleware
 // ================================
 
-app.use(cors());
+app.use(
+    cors({
+        origin: process.env.FRONTEND_URL,
+    })
+);
+
 app.use(express.json());
 
 // ================================
@@ -73,17 +78,6 @@ const authenticateUser = async (req, res, next) => {
         });
     }
 };
-
-// ================================
-// TEST AUTHENTICATION
-// ================================
-
-app.get("/test-auth", authenticateUser, (req, res) => {
-    res.json({
-        message: "Authentication successful",
-        user: req.user,
-    });
-});
 
 // ================================
 // CREATE TASK
@@ -209,7 +203,6 @@ app.patch("/tasks/:id", authenticateUser, async (req, res) => {
         }
 
         res.json(result.rows[0]);
-
     } catch (error) {
         console.error("Update task error:", error);
 
@@ -250,24 +243,6 @@ app.delete("/tasks/:id", authenticateUser, async (req, res) => {
 
         res.status(500).json({
             error: "Database error",
-        });
-    }
-});
-
-// ================================
-// TEST DATABASE
-// ================================
-
-app.get("/test-db", async (req, res) => {
-    try {
-        const result = await pool.query("SELECT NOW()");
-
-        res.json(result.rows);
-    } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            error: "Database connection failed",
         });
     }
 });
