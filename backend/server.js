@@ -151,22 +151,55 @@ app.get("/tasks", authenticateUser, async (req, res) => {
 app.patch("/tasks/:id", authenticateUser, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title } = req.body;
+        const { title, completed, priority } = req.body;
         const userId = req.user.id;
 
-        if (!title || title.trim() === "") {
+        // Validate title if it is being updated
+        if (
+            title !== undefined &&
+            (!title || title.trim() === "")
+        ) {
             return res.status(400).json({
                 error: "Task title is required",
             });
         }
 
+        // Validate completed if it is being updated
+        if (
+            completed !== undefined &&
+            typeof completed !== "boolean"
+        ) {
+            return res.status(400).json({
+                error: "Completed must be true or false",
+            });
+        }
+
+        // Validate priority if it is being updated
+        if (
+            priority !== undefined &&
+            !["low", "medium", "high"].includes(priority)
+        ) {
+            return res.status(400).json({
+                error: "Priority must be low, medium, or high",
+            });
+        }
+
         const result = await pool.query(
             `UPDATE tasks
-             SET title = $1
-             WHERE id = $2
-             AND user_id = $3
+             SET
+                title = COALESCE($1, title),
+                completed = COALESCE($2, completed),
+                priority = COALESCE($3, priority)
+             WHERE id = $4
+             AND user_id = $5
              RETURNING *`,
-            [title, id, userId]
+            [
+                title !== undefined ? title : null,
+                completed !== undefined ? completed : null,
+                priority !== undefined ? priority : null,
+                id,
+                userId,
+            ]
         );
 
         if (result.rows.length === 0) {
@@ -176,6 +209,7 @@ app.patch("/tasks/:id", authenticateUser, async (req, res) => {
         }
 
         res.json(result.rows[0]);
+
     } catch (error) {
         console.error("Update task error:", error);
 
