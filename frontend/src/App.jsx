@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
-
-const API_URL = "http://localhost:5000";
+const API_URL = "https://task-manager-backend-w4hm.onrender.com";
 
 function App() {
   // =========================
